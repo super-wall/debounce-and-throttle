@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>debounce-and-throttle</title>
+  <style>
+    #container {
+      background: #f8f8f8;
+      padding: 1.25rem 1.6rem;
+      border: 1px solid #eee;
+      position: relative;
+      border-radius: 6px;
+    }
+    button {
+      width: 70px;
+      height: 30px;
+    }
+    .normal, .after {
+      height: 30px;
+    }
+    .normal span, .after span{
+      display: inline-block;
+      border-left: 1px solid #000;
+      width: 8px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div class="handle-row">
+      <button>click</button>
+      <button>reset</button>
+      <input type="radio" name="method" id="debounce" checked>
+      <label for="debounce">防抖</label>
+      <input type="radio" name="method" id="throttle">
+      <label for="throttle">节流</label>
+      <input type="checkbox" name="type" id="trailing">
+      <label for="trailing">延时结束后执行</label>
+      <input type="checkbox" name="type" id="leading"checked>
+      <label for="leading">延时结束前执行</label>
+    </div>
+    <p>正常事件触发效果：</p>
+    <div class="normal"></div>
+    <p>节流或防抖事件触发效果：</p>
+    <div class="after"></div>
+  </div>
+  <script src="./debounce.js"></script>
+  <script src="./throttle.js"></script>
+  <script src="./effect.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.15/lodash.min.js"></script>
+  <script>
+    console.log(_)
+    const [invokeTarget, resetTarget] = document.querySelectorAll('button');
+    const normalContainer = document.querySelector('.normal');
+    const afterContainer = document.querySelector('.after');
+
+    const methods = document.querySelectorAll('[name="method"]');
+    const types = document.querySelectorAll('[name="type"]');
+
+    // 0 防抖  1 节流
+    let method = methods[0].checked ? 0 : 1;
+    // [延时结束后执行 , 延时结束前执行]
+    let type = [types[0].checked, types[1].checked]
+
+    for (let i = 0; i < methods.length; i++) {
+      methods[i].addEventListener('click', () => {
+        method = i;
+        reset();
+      })
+    }
+
+    for (let i = 0; i < types.length; i++) {
+      types[i].addEventListener('click', () => {
+        type = [types[0].checked, types[1].checked]
+        reset();
+      })
+    }
+
+
+    const COLORS = ["#FFE589", "#B9C6FF", "#99FF7E", "#FFB38A", "#A5FCFF", "#FF8E9B", "#E3FF7E", "#FFA3D8", "#5ca6ff", "#9BFFBB"];
+    let invokeTimes = 0;
+
+    const normal = new Effect(normalContainer);
+    let after = null;
+    setAfterEffect();
+
+    function setAfterEffect() {
+       
+      after = new Effect(afterContainer, (fn) => {
+        if (method === 0) {
+          return _.debounce(fn, 800, {
+            leading: type[1],
+            trailing: type[0]
+          })
+        } else {
+          return _.throttle(fn, 800, {
+            leading: type[1],
+            trailing: type[0]
+          })
+        }
+      });
+    }
+
+    
+    const changeColor =_.debounce(() => {
+      invokeTimes++
+    }, 800)
+
+    invokeTarget.addEventListener('click', function() {
+      normal.invoke(COLORS[invokeTimes % 9], function () {
+        if (type[1] || method === 1) {
+          changeColor();
+        }
+      });
+      after.invoke(COLORS[invokeTimes % 9], function() {
+        if (type[0] && !type[1] && method !== 1) {
+          invokeTimes++;
+        }
+      });
+    });
+    resetTarget.addEventListener('click', reset);
+
+    function reset() {
+      normal.reset()
+      after.reset()
+      setAfterEffect();
+      invokeTimes = 0;
+    }
+  </script>
+</body>
+</html>
