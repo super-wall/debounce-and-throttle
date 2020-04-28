@@ -46,12 +46,10 @@
     <p>节流或防抖事件触发效果：</p>
     <div class="after"></div>
   </div>
-  <script src="./debounce.js"></script>
-  <script src="./throttle.js"></script>
+  <script src="./src/debounce.js"></script>
+  <script src="./src/throttle.js"></script>
   <script src="./effect.js"></script>
-  <script src="https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.15/lodash.min.js"></script>
   <script>
-    console.log(_)
     const [invokeTarget, resetTarget] = document.querySelectorAll('button');
     const normalContainer = document.querySelector('.normal');
     const afterContainer = document.querySelector('.after');
@@ -90,21 +88,21 @@
        
       after = new Effect(afterContainer, (fn) => {
         if (method === 0) {
-          return _.debounce(fn, 800, {
+          return debounce(fn, 800, {
             leading: type[1],
             trailing: type[0]
           })
         } else {
-          return _.throttle(fn, 800, {
+          return throttle(fn, 800, {
             leading: type[1],
-            trailing: type[0]
+            trailing: type[0],
           })
         }
       });
     }
 
     
-    const changeColor =_.debounce(() => {
+    const changeColor = debounce(() => {
       invokeTimes++
     }, 800)
 
@@ -115,6 +113,7 @@
         }
       });
       after.invoke(COLORS[invokeTimes % 9], function() {
+        console.log('hei?')
         if (type[0] && !type[1] && method !== 1) {
           invokeTimes++;
         }

@@ -1,20 +1,3 @@
-# 实现防抖、节流函数
-
-[demo地址](https://super-wall.github.io/debounce-and-throttle/index.html)
-
-> demo是根据[贼好的文章](https://css-tricks.com/debouncing-throttling-explained-examples/)进行扩展，增加了修改参数的交互。
-
-## 防抖
-
-### 适用场景
-
-防抖是指控制函数被执行的频率，保证在一段时间内(wait)频繁的被触发时，只会执行一次。例如：输入框模糊搜索频繁的调用接口、防止用户多次点击提交按钮、监听鼠标移动、dom的resize等。
-
-### 代码实现
-
-> 以下是简易版，详细版查看src下代码，或阅读lodash源码
-
-```javascript
 /**
  * 对函数增加防抖，将函数执行的时间推迟到wait之后（自上次被触发往后退） 或者 推迟到 下一次页面渲染（通过requestAnimationFrame）
  * @param {Function} fn 要频繁执行的函数
@@ -75,23 +58,3 @@ function debounce(fn, wait, options) {
   // 返回被防抖控制后的函数
   return debounced;
 }
-```
-
-## 节流
-
-### 适用场景
-
-> throttle不单控制了函数频率，而且会wait时间内至少执行一次。
-
-防抖技巧解决了大部分频繁调用的场景，但例如**滚动加载更多**的、个别场景就不适合。加载更多需要监听滚动距离，如果使用`debounce`函数，滑动到底部，wait时间后才会触发，会造成页面交互的卡顿，其实我们需要的是滑动的过程中就要检测，并且不要频繁检测。
-
-### 代码实现
-
-> 以下是简易版，详细版查看src下代码，或阅读lodash源码
-
-```javascript
-// debounce函数传入maxWait 就可以实现throttle
-function throttle(func, wait, options) {
-  return debounce(func, wait, { ...options, maxWait: wait })
-}
-```
