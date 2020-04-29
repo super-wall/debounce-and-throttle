@@ -32,6 +32,9 @@
     <div class="handle-row">
       <button>click</button>
       <button>reset</button>
+      <button>cancel</button>
+      <button>flush</button>
+      <button>isPending</button>
       <input type="radio" name="method" id="debounce" checked>
       <label for="debounce">防抖</label>
       <input type="radio" name="method" id="throttle">
@@ -50,7 +53,7 @@
   <script src="./src/throttle.js"></script>
   <script src="./effect.js"></script>
   <script>
-    const [invokeTarget, resetTarget] = document.querySelectorAll('button');
+    const [invokeTarget, resetTarget, cancelTarget, flushTarget, pendingTarget] = document.querySelectorAll('button');
     const normalContainer = document.querySelector('.normal');
     const afterContainer = document.querySelector('.after');
 
@@ -113,13 +116,33 @@
         }
       });
       after.invoke(COLORS[invokeTimes % 9], function() {
-        console.log('hei?')
         if (type[0] && !type[1] && method !== 1) {
           invokeTimes++;
         }
       });
     });
     resetTarget.addEventListener('click', reset);
+
+    cancelTarget.addEventListener('click', function() {
+      if (after.fillColor.cancel) {
+        after.fillColor.cancel()
+      }
+    });
+
+    flushTarget.addEventListener('click', function() {
+      if (after.fillColor.flush) {
+        after.fillColor.flush()
+      }
+    });
+
+    pendingTarget.addEventListener('click', function() {
+      if (after.fillColor.pending) {
+        this.innerHTML = after.fillColor.pending() ? 'true' : 'false';
+        setTimeout(() => {
+          this.innerHTML = 'isPending';
+        }, 800)
+      }
+    });
 
     function reset() {
       normal.reset()

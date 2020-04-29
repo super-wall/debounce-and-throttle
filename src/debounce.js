@@ -9,6 +9,10 @@
  */
 function debounce(fn, wait, options) {
 
+  if (typeof fn !== 'function') {
+    throw new TypeError('Expected a function')
+  }
+
   // 默认参数
   options = {
     leading: false,
@@ -16,45 +20,98 @@ function debounce(fn, wait, options) {
     ...options
   }
 
-  // 延时器id
-  let timer = null;
-  // 绑定this
-  let context = null;
-  // 参数
-  let args = null;
+  // 延时器Id
+  let timerId = null;
+  // 函数执行结果
+  let result = null;
+  // 绑定的this
+  let lastContext = null;
+  // 函数传入的参数
+  let lastArgs = null;
   // 上一次执行的时间
-  let prev = 0;
+  let lastInvokeTime = 0;
 
-  function debounced() {
-    context = this;
-    args = arguments;
-    // 延时前执行，timer不存在时说明没有被触发，可以执行
-    if (options.leading && !timer) {
-      fn.apply(context, args);
-    }
-    // throttle的prev初始值为当前时间，防止多触发一次
-    if (options.maxWait && !prev) {
-      prev = Date.now();
-    }
-    // 重置timer
-    if (timer) {
-      clearTimeout(timer);
-    }
-    // 距离上一次被真正执行超过maxWait
-    if (options.maxWait && Date.now() - prev > options.maxWait) {
-      prev = Date.now();
-      fn.apply(context, args);
-    }
-    // 将函数执行的时间推迟到wait之后
-    timer = setTimeout(() => {
-      if (options.trailing) {
-        fn.apply(context, args);
-        prev = Date.now();
-      }
-      timer = null;
-    }, wait)
+  
+  // 执行真正的函数
+  function invokeFunc(time) {
+    const currContext = lastContext;
+    const currArgs = lastArgs;
+    // 置空this、参数
+    lastContext = lastArgs = null;
+    // 更新上一次执行时间
+    lastInvokeTime = time;
+    result = fn.apply(currContext, currArgs);
+    return result;
   }
 
-  // 返回被防抖控制后的函数
+  // 延时前阶段
+  function leadingEdge(time) {
+    lastInvokeTime = time;
+    if (options.leading) {
+      result = invokeFunc(time);
+    }
+  }
+
+  // 延时后阶段
+  function trailingEdge(time) {
+    timerId = null;
+    // trailing为true执行
+    if (options.trailing && lastArgs) {
+      result = invokeFunc(time);
+    }
+    // 置空this、参数
+    lastContext = lastArgs = null;
+  }
+
+
+  // 取消当前防抖控制
+  function cancel() {
+    if (timerId !== null) {
+      clearTimeout(timerId)
+    }
+    lastInvokeTime = 0
+    lastArgs = lastContext = timerId = null
+  }
+
+  // 立即执行函数
+  function flush() {
+    if (timerId !== null) {
+      trailingEdge(Date.now());
+    }
+  }
+
+  // 是否防抖控制中
+  function pending() {
+    return timerId !== null;
+  }
+
+  function debounced(...args) {
+    const time = Date.now();
+
+    lastArgs = args;
+    lastContext = this;
+
+    // 首次被调用，进入延时前阶段
+    if (timerId == null) {
+      leadingEdge(time);
+    }
+
+    // throttle传入maxWait，maxWait内至少执行一次
+    const timeSinceLastInvoke = time - lastInvokeTime;
+    if (options.maxWait && timeSinceLastInvoke >= options.maxWait) {
+      invokeFunc(time);
+    }
+    
+    // 每次被调用，重置定时器
+    clearTimeout(timerId);
+    timerId = setTimeout(trailingEdge, wait);
+
+    return result;
+  }
+
+  debounced.cancel = cancel;
+  debounced.flush = flush;
+  debounced.pending = pending;
+
   return debounced;
 }
