@@ -53,7 +53,9 @@ function debounce(fn, wait, options) {
   }
 
   // 延时后阶段
-  function trailingEdge(time) {
+  function trailingEdge() {
+    const time = Date.now();
+
     timerId = null;
     // trailing为true执行
     if (options.trailing && lastArgs) {
@@ -76,7 +78,7 @@ function debounce(fn, wait, options) {
   // 立即执行函数
   function flush() {
     if (timerId !== null) {
-      trailingEdge(Date.now());
+      trailingEdge();
     }
   }
 
